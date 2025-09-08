@@ -1,0 +1,29 @@
+# This file needs to be moved to .github/workflows/
+# Generic Command Runner Workflow
+name: Run Command
+
+on:
+  repository_dispatch:
+    types: [run-command]
+
+permissions:
+  contents: write
+
+jobs:
+  execute:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Execute command
+      run: ${{ github.event.client_payload.command }}
+    - name: Setup git config  
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+    - name: Commit and push changes
+      run: |
+        if [[ -n "$(git status --porcelain)" ]]; then
+          git add .
+          git commit -m "${{ github.event.client_payload.message || 'Command executed' }}"
+          git push
+        fi
